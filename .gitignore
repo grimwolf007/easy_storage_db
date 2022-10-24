@@ -2,3 +2,5 @@ pgdata
 minio-data
 builds
 latest_build
+.ssh
+.minio_secrets
