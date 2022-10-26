@@ -28,6 +28,7 @@ remove used images
  - [ ] Milestone 2
    - [x] Store minio service account environment in a file
    - [ ] Create webapp
+     - [x] upload a file to the webapp
      - [ ] Upload an object to minio
        - [ ] and store details in postgres
        - [ ] and check if the name is already used
