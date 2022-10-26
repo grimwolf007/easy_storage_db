@@ -4,3 +4,7 @@ builds
 latest_build
 .ssh
 .minio_secrets
+pipeline_logs/
+latest_pipeline.log
+git_ignore.sh
+upload.sh

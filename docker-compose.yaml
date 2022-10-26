@@ -33,3 +33,6 @@ services:
     image: easy_storage_webapp
     ports:
       - "8080:8080"
+    volumes:
+      - ./test:/app/test
+      - ./.minio_secrets:/app/.minio_secrets
