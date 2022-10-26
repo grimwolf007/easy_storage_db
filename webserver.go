@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+
+	// File Uploads
+	"os"
 
 	// For configs as json
 	"encoding/json"
@@ -12,62 +16,126 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	// MinioSDK
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
+
+//global
+
+var minio_client = init_minio_client()
 
 func main() {
 
 	// Minio Settings (from minio/identity/account)
-	//minio_endpoint := "minio"
-	//accessKeyID := ""
-	//secretAccessKey := ""
-	//useSSL := false
-	// Put minio_env
-	//put_minio_env(minio_env_params{Endpoint: minio_endpoint, AccessID: accessKeyID, SecretKey: secretAccessKey, Ssl: useSSL})
-	put_minio_env(minio_env_params{Ssl: false})
-	// Pull minio_env
-	pull_minio_env()
-	//Golang Webserver
+	// put_minio_env(minio_env{Ssl: false})
+	// Golang Webserver
 	start_webserver()
 
-	//Test upload
-	upload_to_minio()
 }
 
 // Does not take params, Just runs a basic web-server
 func start_webserver() {
 	// Basic Webserver
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
+	router := gin.Default()
+	router.MaxMultipartMemory = 8 << 20 // 8 MiB Memory limit for multipart forms. Don't understand this
+
+	//GET pages
+	router.GET("/health-check", Healthcheck_page)
+	router.GET("/bucket-list", BucketList_page)
+	router.GET("/stop-server", StopServer_page)
+
+	//POST pages
+	router.POST("/upload", Upload)
+
+	//start server
+	router.Run() // Listen/serve 0.0.0.0:8080
+}
+
+func init_minio_client() *minio.Client {
+	env := pull_minio_env()
+	log.Println(env)
+	log.Println("Setting up Minio Client")
+	minioClient, err := minio.New(env.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(env.AccessID, env.SecretKey, ""),
+		Secure: env.Ssl,
 	})
-	r.Run() // Listen/serve 0.0.0.0:8080
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println("Minio Client Ready")
+	return minioClient
+}
+
+// GET HealthCheck
+func Healthcheck_page(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"Health": "OK"})
+}
+
+// GET BucketList
+func BucketList_page(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"Bucket List": list_minio_buckets(minio_client)})
+}
+
+// GET Stop webserver page
+func StopServer_page(c *gin.Context) {
+	os.Exit(200)
+}
+
+// GET List Buckets
+func list_minio_buckets(minio_client *minio.Client) string {
+	client := minio_client
+	list := ""
+	bucket_list, _ := client.ListBuckets(context.Background())
+	for message := range bucket_list {
+		list += string(message) + "\n"
+	}
+	return list
+}
+
+// POST Upload
+func Upload(c *gin.Context) {
+	// Multipart form
+	form, _ := c.MultipartForm()
+	files := form.File["upload[]"]
+	dst := "./test/"
+
+	//Print each file
+	for _, file := range files {
+		log.Println(file.Filename)
+		log.Println(dst + file.Filename)
+
+		//upload the file to destination
+		c.SaveUploadedFile(file, dst+file.Filename)
+	}
+	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", len(files)))
 }
 
 // uploads files from webserver to minio
-func upload_to_minio() {
-	fmt.Println("Not yet setup")
+func upload_to_minio() string {
+	log.Print("Not yet setup")
+	return "Not Setup Yet"
+}
+
+// minio_env Object
+type minio_env struct {
+	Endpoint, AccessID, SecretKey string
+	Ssl                           bool
 }
 
 // Pulls the minio environment from .minio_secrets
-func pull_minio_env() minio_env_params {
+func pull_minio_env() minio_env {
 	file, _ := ioutil.ReadFile(".minio_secrets")
-	env := minio_env_params{}
+	env := minio_env{}
 	_ = json.Unmarshal([]byte(file), &env)
 	return env
-}
-
-type minio_env_params struct {
-	Endpoint, AccessID, SecretKey string
-	Ssl                           bool
 }
 
 // Saves the minio environment to .minio_secrets
 // REQUIRES SSL USAGE!
 // To-do: see if there is a new change before putting
-func put_minio_env(env minio_env_params) {
+func put_minio_env(env minio_env) {
 	old_env := pull_minio_env()
 	if env.Endpoint == "" {
 		env.Endpoint = old_env.Endpoint
