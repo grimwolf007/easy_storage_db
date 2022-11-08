@@ -45,9 +45,11 @@ func start_webserver() {
 	router.GET("/health-check", Healthcheck_page)
 	router.GET("/bucket-list", BucketList_page)
 	router.GET("/stop-server", StopServer_page)
+	router.GET("/bucket/:name", Get_bucket)
 
 	//POST pages
 	router.POST("/upload", Upload)
+	router.POST("/create_bucket/:name", Create_bucket)
 
 	//start server
 	router.Run() // Listen/serve 0.0.0.0:8080
@@ -75,7 +77,8 @@ func Healthcheck_page(c *gin.Context) {
 
 // GET BucketList
 func BucketList_page(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"Bucket List": list_minio_buckets(minio_client)})
+	list := list_minio_buckets(minio_client)
+	c.JSON(http.StatusOK, gin.H{"Bucket List": list})
 }
 
 // GET Stop webserver page
@@ -87,11 +90,21 @@ func StopServer_page(c *gin.Context) {
 func list_minio_buckets(minio_client *minio.Client) string {
 	client := minio_client
 	list := ""
-	bucket_list, _ := client.ListBuckets(context.Background())
-	for message := range bucket_list {
-		list += string(message) + "\n"
+	bucket_list, err := client.ListBuckets(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for _, message := range bucket_list {
+		log.Println(message)
+		list += message.Name
 	}
 	return list
+}
+
+// GET Get_bucket
+func Get_bucket(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"Bucket List": c.Param("name")})
 }
 
 // POST Upload
@@ -110,6 +123,11 @@ func Upload(c *gin.Context) {
 		c.SaveUploadedFile(file, dst+file.Filename)
 	}
 	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded!", len(files)))
+}
+
+// POST Create_bucket
+func Create_bucket(c *gin.Context) {
+	log.Println(c.Param("name"))
 }
 
 // uploads files from webserver to minio
