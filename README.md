@@ -55,7 +55,8 @@ remove used images
    - [ ] Add docker container scanning to pipeline
    - [ ] Add golang static scanning to pipeline
 
-
+#Todo
+ - [ ] Bucket needs input validation test, buckets need lowercase
 
 
 # Database Schema
