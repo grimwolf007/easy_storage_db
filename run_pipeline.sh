@@ -21,5 +21,5 @@ log_rotate(){
 
 log_rotate 10
 date > latest_pipeline.log
-./pipeline.sh  &>> latest_pipeline.log
+./pipeline.sh $1  2>&1 | tee latest_pipeline.log
 less -R latest_pipeline.log

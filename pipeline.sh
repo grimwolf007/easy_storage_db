@@ -48,8 +48,15 @@ info Replacing Latest
   go build -o latest_build/webserver
 info Building Docker compose
   docker compose build
-info Starting server
-  docker compose up -d
+info Starting servers
+  docker compose up &
+
+  
+if [ "$1" == "prune" ]
+then
+  info Removing unused images/containers
+    docker system prune -f
+fi
 
 
 info "Testing webapp"
@@ -69,7 +76,7 @@ info "Testing webapp"
   info "Testing /upload"
     test_file="/home/john/git/easy_storage_db/test/test_upload_files/testing.txt"
     check_file="/home/john/git/easy_storage_db/test/testing.txt"
-    curl -f -X POST http://localhost:8080/upload \
+    curl -s -f -X POST http://localhost:8080/upload \
       -F "upload[]=@${test_file}"
     diff $test_file $check_file && tmp=0 || tmp=1
     SucOrFail $tmp "Upload Test"
@@ -77,17 +84,22 @@ info "Testing webapp"
   echo
 
 info Testing Minio
-  info "Testing make minio bucket"
-  curl -f -X POST http://localhost:8080/create_bucket/Test-Bucket && tmp=0 || tmp=1
-  SucOrFail $tmp "Create_minio_test_bucket Test"
-  echo
 
   info "Testing get minio bucket"
-  curl -f -X GET http://localhost:8080/get_bucket/Test-Bucket && tmp=0 || tmp=1
+  curl -s -f -X GET http://localhost:8080/get_bucket/Test-Bucket && tmp=0 || tmp=1
   SucOrFail $tmp "Get_minio_test_bucket Test"
   echo
 
+  info "Testing make minio bucket"
+  curl -s -f -X POST http://localhost:8080/create_bucket/Test-Bucket2 && tmp=0 || tmp=1
+  SucOrFail $tmp "Create_minio_test_bucket Test"
+  echo
+
   info "Testing list minio buckets"
+  fatal "No Test Made"
+  echo
+
+  info "Testing remove minio bucket"
   fatal "No Test Made"
   echo
 
@@ -103,10 +115,6 @@ info Testing Minio
   fatal "No Test Made"
   echo
 
-  info "Testing remove minio bucket"
-  fatal "No Test Made"
-  echo
-
 #echo Testing Postgres
 
 #echo Testing Adminer
@@ -116,7 +124,7 @@ info Testing Minio
 
 
 
-
-
+info "Pausing"
+read
 echo Stopping server
 docker compose down
