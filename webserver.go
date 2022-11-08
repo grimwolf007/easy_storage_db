@@ -127,7 +127,21 @@ func Upload(c *gin.Context) {
 
 // POST Create_bucket
 func Create_bucket(c *gin.Context) {
-	log.Println(c.Param("name"))
+	location := "Test"
+	name := c.Param("name")
+	client := minio_client
+	ctx := context.Background()
+	err := client.MakeBucket(ctx, name, minio.MakeBucketOptions{Region: location})
+	if err != nil {
+		exists, errBucketExists := client.BucketExists(ctx, name)
+		if errBucketExists == nil && exists {
+			log.Printf("Bucket %s already exists\n", name)
+		} else {
+			log.Fatalln(err)
+		}
+	} else {
+		log.Printf("Successfully created %s\n", name)
+	}
 }
 
 // uploads files from webserver to minio
