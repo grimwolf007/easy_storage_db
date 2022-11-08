@@ -86,12 +86,12 @@ info "Testing webapp"
 info Testing Minio
 
   info "Testing get minio bucket"
-  curl -s -f -X GET http://localhost:8080/get_bucket/Test-Bucket && tmp=0 || tmp=1
+  curl -s -f -X GET http://localhost:8080/get_bucket/test-bucket && tmp=0 || tmp=1
   SucOrFail $tmp "Get_minio_test_bucket Test"
   echo
 
   info "Testing make minio bucket"
-  curl -s -f -X POST http://localhost:8080/create_bucket/Test-Bucket2 && tmp=0 || tmp=1
+  curl -s -f -X POST http://localhost:8080/create_bucket/test-bucket2 && tmp=0 || tmp=1
   SucOrFail $tmp "Create_minio_test_bucket Test"
   echo
 
