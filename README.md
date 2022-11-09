@@ -28,13 +28,19 @@ remove used images
  - [ ] Milestone 2
    - [x] Store minio service account environment in a file
    - [ ] Create webapp
-     - [x] upload a file to the webapp
+     - [x] Upload a file to the webapp
+     - [x] Create Bucket
+     - [x] List Buckets
+     - [ ] View Bucket Details
+     - [ ] Update Bucket Details
+     - [ ] Remove Buckets
      - [ ] Upload an object to minio
        - [ ] and store details in postgres
        - [ ] and check if the name is already used
        - [ ] and check if file already exists and you just want to add the name as a new tag
      - [ ] Re-upload an object
        - [ ] and store N revisions
+     - [ ] View object details
      - [ ] Edit object details
      - [ ] Download object
      - [ ] Clear object Details
