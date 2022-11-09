@@ -75,31 +75,32 @@ func Healthcheck_page(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"Health": "OK"})
 }
 
+// ListBuckets
+func list_minio_buckets(minio_client *minio.Client) []minio.BucketInfo {
+	client := minio_client
+	//list := ""
+	bucket_list, err := client.ListBuckets(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
+	//for _, message := range bucket_list {
+	//	log.Println(message.Name)
+	//	list += "_" + message.Name
+	//}
+	//return list
+	return bucket_list
+}
+
 // GET BucketList
 func BucketList_page(c *gin.Context) {
 	list := list_minio_buckets(minio_client)
-	c.JSON(http.StatusOK, gin.H{"Bucket List": list})
+	c.JSON(http.StatusOK, list)
+	//c.JSON(http.StatusOK, gin.H{"Bucket List": list})
 }
 
 // GET Stop webserver page
 func StopServer_page(c *gin.Context) {
 	os.Exit(200)
-}
-
-// GET List Buckets
-func list_minio_buckets(minio_client *minio.Client) string {
-	client := minio_client
-	list := ""
-	bucket_list, err := client.ListBuckets(context.Background())
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	for _, message := range bucket_list {
-		log.Println(message)
-		list += message.Name
-	}
-	return list
 }
 
 // GET Get_bucket
