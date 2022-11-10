@@ -31,8 +31,8 @@ remove used images
      - [x] Upload a file to the webapp
      - [x] Create Bucket
      - [x] List Buckets
-     - [ ] View Bucket Details
-     - [ ] Update Bucket Details
+     - [ ] *View Bucket Details* (Probably not necessary)
+     - [ ] *Update Bucket Details* (Probably not necessary)
      - [ ] Remove Buckets
      - [ ] Upload an object to minio
        - [ ] and store details in postgres
