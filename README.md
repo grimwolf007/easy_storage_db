@@ -33,7 +33,7 @@ remove used images
      - [x] List Buckets
      - [ ] *View Bucket Details* (Probably not necessary)
      - [ ] *Update Bucket Details* (Probably not necessary)
-     - [ ] Remove Buckets
+     - [x] Remove Buckets
      - [ ] Upload an object to minio
        - [ ] and store details in postgres
        - [ ] and check if the name is already used
