@@ -8,3 +8,4 @@ pipeline_logs/
 latest_pipeline.log
 git_ignore.sh
 upload.sh
+test/*/*

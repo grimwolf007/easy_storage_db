@@ -60,47 +60,62 @@ fi
 
 
 info "Testing webapp"
-
   info "Testing /healthcheck"
+    file="./test/test_healthcheck_files/healthcheck_testing"
+    test_file="${file}.test"
+    actual_file="${file}.act"
     count=1
-    until wget 127.0.0.1:8080/health-check -O ./test/tmp  || [ $count -eq 10 ]
+    until wget 127.0.0.1:8080/health-check -O $actual_file  || [ $count -eq 10 ]
     do
       let count+=1
       sleep 1
     done
-    diff ./test/tmp ./test/healthcheck.test && tmp=0 || tmp=1
+    diff $test_file $actual_file && tmp=0 || tmp=1
     SucOrFail $tmp "Health_Check_${count} Test"
-    rm -f ./test/tmp
   echo
 
   info "Testing /upload"
-    test_file="/home/john/git/easy_storage_db/test/test_upload_files/testing.txt"
-    check_file="/home/john/git/easy_storage_db/test/testing.txt"
-    curl -s -f -X POST http://localhost:8080/upload \
-      -F "upload[]=@${test_file}"
-    diff $test_file $check_file && tmp=0 || tmp=1
+    file="./test/test_upload_files/upload_testing"
+    test_file="${file}.test"
+    upload_file="./test/upload_testing.test"
+    actual_file="${file}.act"
+    curl -f -X POST http://localhost:8080/upload -F "upload[]=@${test_file}"
+    mv -f ${upload_file} ${actual_file}
+    diff $test_file $actual_file && tmp=0 || tmp=1
     SucOrFail $tmp "Upload Test"
-    rm -f $check_file
   echo
 
 info Testing Minio
-
-  info "Testing get minio bucket"
-  curl -s -f -X GET http://localhost:8080/get_bucket/test-bucket && tmp=0 || tmp=1
-  SucOrFail $tmp "Get_minio_test_bucket Test"
+  test="List_Minio_Buckets"
+  info "Testing ${test}"
+    file="./test/test_list-buckets_files/list-buckets_testing"
+    test_file="${file}.test"
+    actual_file="${file}.act"
+    curl -o $actual_file -f -X GET http://localhost:8080/list_buckets
+    diff $test_file $actual_file && tmp=0 || tmp=1
+    SucOrFail $tmp "$test Test"
   echo
 
-  info "Testing make minio bucket"
-  curl -s -f -X POST http://localhost:8080/create_bucket/test-bucket2 && tmp=0 || tmp=1
-  SucOrFail $tmp "Create_minio_test_bucket Test"
+  test="Create_Minio_Bucket"
+  info "Testing ${test}"
+    file="./test/test_make-bucket_files/make-bucket_testing"
+    test_file="${file}.test"
+    actual_file="${file}.act"
+    curl -s -f -X POST http://localhost:8080/create_bucket/test-bucket2
+    curl -o $actual_file -f -X GET http://localhost:8080/list_buckets
+    diff $test_file $actual_file && tmp=0 || tmp=1
+    SucOrFail $tmp "$test Test"
   echo
 
-  info "Testing list minio buckets"
-  fatal "No Test Made"
-  echo
-
-  info "Testing remove minio bucket"
-  fatal "No Test Made"
+  test="Remove_Minio_Bucket"
+  info "Testing ${test}"
+    file="./test/test_remove-bucket_files/remove-bucket_testing"
+    test_file="${file}.test"
+    actual_file="${file}.act"
+    curl -s -f -X POST http://localhost:8080/remove_bucket/test-bucket2
+    curl -o $actual_file -f -X GET http://localhost:8080/list_buckets
+    diff $test_file $actual_file && tmp=0 || tmp=1
+    SucOrFail $tmp "$test Test"
   echo
 
   info "Testing add new object"
