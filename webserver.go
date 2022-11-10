@@ -43,13 +43,14 @@ func start_webserver() {
 
 	//GET pages
 	router.GET("/health-check", Healthcheck_page)
-	router.GET("/bucket-list", BucketList_page)
 	router.GET("/stop-server", StopServer_page)
+	router.GET("/list_buckets", BucketList_page)
 	router.GET("/bucket/:name", Get_bucket)
 
 	//POST pages
 	router.POST("/upload", Upload)
 	router.POST("/create_bucket/:name", Create_bucket)
+	router.POST("/remove_bucket/:name", Remove_bucket)
 
 	//start server
 	router.Run() // Listen/serve 0.0.0.0:8080
@@ -78,16 +79,10 @@ func Healthcheck_page(c *gin.Context) {
 // ListBuckets
 func list_minio_buckets(minio_client *minio.Client) []minio.BucketInfo {
 	client := minio_client
-	//list := ""
 	bucket_list, err := client.ListBuckets(context.Background())
 	if err != nil {
 		log.Fatalln(err)
 	}
-	//for _, message := range bucket_list {
-	//	log.Println(message.Name)
-	//	list += "_" + message.Name
-	//}
-	//return list
 	return bucket_list
 }
 
@@ -95,7 +90,6 @@ func list_minio_buckets(minio_client *minio.Client) []minio.BucketInfo {
 func BucketList_page(c *gin.Context) {
 	list := list_minio_buckets(minio_client)
 	c.JSON(http.StatusOK, list)
-	//c.JSON(http.StatusOK, gin.H{"Bucket List": list})
 }
 
 // GET Stop webserver page
@@ -142,6 +136,17 @@ func Create_bucket(c *gin.Context) {
 		}
 	} else {
 		log.Printf("Successfully created %s\n", name)
+	}
+}
+
+// POST Remove_bucket
+func Remove_bucket(c *gin.Context) {
+	client := minio_client
+	bucket_name := c.Param("name")
+	err := client.RemoveBucket(context.Background(), bucket_name)
+	if err != nil {
+		log.Fatalln(err)
+		return
 	}
 }
 
