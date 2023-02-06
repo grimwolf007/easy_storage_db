@@ -26,6 +26,10 @@ import (
 
 var minio_client = init_minio_client()
 
+func debug(router gin.RouterGroup) {
+	router.GET("/stop-server", StopServer_page)
+}
+
 func main() {
 
 	// Minio Settings (from minio/identity/account)
@@ -39,19 +43,27 @@ func main() {
 func start_webserver() {
 	// Basic Webserver
 	router := gin.Default()
+	router.LoadHTMLGlob("template/*")
+
 	router.MaxMultipartMemory = 8 << 20 // 8 MiB Memory limit for multipart forms. Don't understand this
 
 	//GET pages
+	router.GET("/", Index_page)
 	router.GET("/health-check", Healthcheck_page)
-	router.GET("/stop-server", StopServer_page)
 	router.GET("/list_buckets", BucketList_page)
-	router.GET("/bucket/:name", Get_bucket)
+	router.GET("/bucket/:name", Get_bucket_page)
+	router.GET("/upload/server", Upload_server_page)
 
 	//POST pages
-	router.POST("/upload", Upload)
+	router.POST("/upload/server", Upload_host)  // Must remove or create authenitacion for
+	router.POST("/upload/object", Upload_minio) // Create login page for minio?
 	router.POST("/create_bucket/:name", Create_bucket)
 	router.POST("/remove_bucket/:name", Remove_bucket)
 
+	//Debug pages
+	if os.Getenv("DEBUG") == "TRUE" {
+		router.GET("/stop-server", StopServer_page)
+	}
 	//start server
 	router.Run() // Listen/serve 0.0.0.0:8080
 }
@@ -69,6 +81,11 @@ func init_minio_client() *minio.Client {
 	}
 	log.Println("Minio Client Ready")
 	return minioClient
+}
+
+// GET Index
+func Index_page(c *gin.Context) {
+	c.HTML(http.StatusOK, "index.html", nil)
 }
 
 // GET HealthCheck
@@ -92,20 +109,30 @@ func BucketList_page(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
+// GET Upload_server_page
+func Upload_server_page(c *gin.Context) {
+	c.JSON(http.StatusOK, "hello")
+}
+
 // GET Stop webserver page
+// Stops the webserver with code 200 [DEBUG]
 func StopServer_page(c *gin.Context) {
 	os.Exit(200)
 }
 
-// GET Get_bucket
-func Get_bucket(c *gin.Context) {
+// GET Get_bucket_page
+// Displays the name given in the uri as a json
+func Get_bucket_page(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"Bucket List": c.Param("name")})
 }
 
-// POST Upload
-func Upload(c *gin.Context) {
+// POST Upload_host (File to host)
+func Upload_host(c *gin.Context) {
 	// Multipart form
-	form, _ := c.MultipartForm()
+	form, err := c.MultipartForm()
+	if err != nil {
+		log.Fatalln(err)
+	}
 	files := form.File["upload[]"]
 	dst := "./test/"
 
@@ -150,10 +177,22 @@ func Remove_bucket(c *gin.Context) {
 	}
 }
 
-// uploads files from webserver to minio
-func upload_to_minio() string {
-	log.Print("Not yet setup")
-	return "Not Setup Yet"
+// POST Upload_to_minio uploads files from webserver to minio
+func Upload_minio(c *gin.Context) {
+	// Multipart form
+	form, _ := c.MultipartForm()
+	files := form.File["upload[]"]
+	dst := "./test/"
+
+	//Print each file
+	for _, file := range files {
+		log.Println(file.Filename)
+		log.Println(dst + file.Filename)
+
+		//upload the file to destination
+		c.SaveUploadedFile(file, dst+file.Filename)
+	}
+	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded to minio uploaded!", len(files)))
 }
 
 // minio_env Object
