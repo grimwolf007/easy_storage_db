@@ -74,12 +74,12 @@ info "Testing webapp"
     SucOrFail $tmp "Health_Check_${count} Test"
   echo
 
-  info "Testing /upload"
+  info "Testing /upload/server"
     file="./test/test_upload_files/upload_testing"
     test_file="${file}.test"
     upload_file="./test/upload_testing.test"
     actual_file="${file}.act"
-    curl -f -X POST http://localhost:8080/upload -F "upload[]=@${test_file}"
+    curl -f -X POST http://localhost:8080/upload/server -F "upload[]=@${test_file}"
     mv -f ${upload_file} ${actual_file}
     diff $test_file $actual_file && tmp=0 || tmp=1
     SucOrFail $tmp "Upload Test"
@@ -103,7 +103,9 @@ info Testing Minio
     actual_file="${file}.act"
     curl -s -f -X POST http://localhost:8080/create_bucket/test-bucket2
     curl -o $actual_file -f -X GET http://localhost:8080/list_buckets
-    diff $test_file $actual_file && tmp=0 || tmp=1
+    exists=$(cat $actual_file | jq '.[] | select(.name=="test-bucket2")')
+    info "New Bucket: $exists"
+    [ ! -z "$exists" ] && tmp=0 || tmp=1
     SucOrFail $tmp "$test Test"
   echo
 
@@ -114,7 +116,11 @@ info Testing Minio
     actual_file="${file}.act"
     curl -s -f -X POST http://localhost:8080/remove_bucket/test-bucket2
     curl -o $actual_file -f -X GET http://localhost:8080/list_buckets
-    diff $test_file $actual_file && tmp=0 || tmp=1
+    exists=$(cat $actual_file | jq '.[] | select(.name=="test-bucket2")')
+    
+    [ -z "$exists" ] && tmp=0 || tmp=1
+    [ -z "$exists" ] && info "test-bucket2 nolonger exists."
+    [ ! -z "$exists" ] && fatal "$exists"
     SucOrFail $tmp "$test Test"
   echo
 
