@@ -192,7 +192,7 @@ func Upload_minio(c *gin.Context) {
 		//upload the file to destination
 		c.SaveUploadedFile(file, dst+file.Filename)
 	}
-	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded to minio uploaded!", len(files)))
+	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded to minio!", len(files)))
 }
 
 // minio_env Object
