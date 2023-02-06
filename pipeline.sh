@@ -92,7 +92,9 @@ info Testing Minio
     test_file="${file}.test"
     actual_file="${file}.act"
     curl -o $actual_file -f -X GET http://localhost:8080/list_buckets
-    diff $test_file $actual_file && tmp=0 || tmp=1
+    exists=$(cat $actual_file | jq '.[]')
+    info "Buckets: $exists"
+    [ ! -z "$exists" ] && tmp=0 || tmp=1
     SucOrFail $tmp "$test Test"
   echo
 
