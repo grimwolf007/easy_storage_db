@@ -123,7 +123,23 @@ func StopServer_page(c *gin.Context) {
 // GET Get_bucket_page
 // Displays the name given in the uri as a json
 func Get_bucket_page(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"Bucket List": c.Param("name")})
+
+	opts := minio.ListObjectsOptions{
+		UseV1:     true,
+		Prefix:    "",
+		Recursive: true,
+	}
+	objects := make([]string, 0)
+	// List all objects from a bucket-name with a matching prefix.
+	for object := range minio_client.ListObjects(context.Background(), c.Param("name"), opts) {
+		if object.Err != nil {
+			log.Println(object.Err)
+			return
+		}
+		objects = append(objects, object.Key)
+	}
+	c.JSON(http.StatusOK, objects)
+
 }
 
 // POST Upload_host (File to host)
@@ -177,7 +193,7 @@ func Remove_bucket(c *gin.Context) {
 	}
 }
 
-// POST Upload_to_minio uploads files from webserver to minio
+// POST Upload_minio uploads files from webserver to minio
 func Upload_minio(c *gin.Context) {
 	// Multipart form
 	form, _ := c.MultipartForm()

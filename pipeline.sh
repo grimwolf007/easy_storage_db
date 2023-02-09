@@ -126,13 +126,23 @@ info Testing Minio
     SucOrFail $tmp "$test Test"
   echo
 
+  test="Get_Objects"
+  info "Testing ${test}"
+    file="./test/test_${test}_files/${test}_testing"
+    test_file="${file}.test"
+    actual_file="${file}.act"
+    curl -o $actual_file -f -X GET http://localhost:8080/bucket/test-bucket
+    exists=$(cat $actual_file | jq '.[0]')
+    info "Objects: $exists"
+    [ ! -z "$exists" ] && tmp=0 || tmp=1
+    SucOrFail $tmp "$test Test"
+  echo
+
   info "Testing add new object"
   fatal "No Test Made"
   echo 
 
-  info "Testing get object"
-  fatal "No Test Made"
-  echo
+
 
   info "Testing remove object"
   fatal "No Test Made"
