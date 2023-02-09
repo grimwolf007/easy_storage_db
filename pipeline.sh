@@ -138,8 +138,17 @@ info Testing Minio
     SucOrFail $tmp "$test Test"
   echo
 
-  info "Testing add new object"
-  fatal "No Test Made"
+  test="Put_Objects"
+  info "Testing ${test}"
+    name="upload_testing2"
+    file="./test/test_upload_files/${name}"
+    test_file="${file}.test"
+    upload_file="./test/${name}.test"
+    actual_file="${file}.act"
+    curl -f -X POST http://localhost:8080/upload/server -F "upload[]=@${test_file}"
+    mv -f ${upload_file} ${actual_file}
+    diff $test_file $actual_file && tmp=0 || tmp=1
+    SucOrFail $tmp "${test} Test"
   echo 
 
 

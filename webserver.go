@@ -55,10 +55,11 @@ func start_webserver() {
 	router.GET("/upload/server", Upload_server_page)
 
 	//POST pages
-	router.POST("/upload/server", Upload_host)  // Must remove or create authenitacion for
-	router.POST("/upload/object", Upload_minio) // Create login page for minio?
+	router.POST("/upload/server", Upload_host) // Must remove or create authenitacion for
 	router.POST("/create_bucket/:name", Create_bucket)
 	router.POST("/remove_bucket/:name", Remove_bucket)
+	router.POST("/upload/object/:bucket", Upload_minio) // Create login page for minio?
+	router.POST("/remove_object/:bucket/:name", Remove_bucket)
 
 	//Debug pages
 	if os.Getenv("DEBUG") == "TRUE" {
@@ -196,7 +197,11 @@ func Remove_bucket(c *gin.Context) {
 // POST Upload_minio uploads files from webserver to minio
 func Upload_minio(c *gin.Context) {
 	// Multipart form
-	form, _ := c.MultipartForm()
+	form, err := c.MultipartForm()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	bucket := c.Param("bucket")
 	files := form.File["upload[]"]
 	dst := "./test/"
 
@@ -207,8 +212,39 @@ func Upload_minio(c *gin.Context) {
 
 		//upload the file to destination
 		c.SaveUploadedFile(file, dst+file.Filename)
+		object, err := os.Open(dst + file.Filename)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer object.Close()
+		objectStat, err := object.Stat()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		n, err := minio_client.PutObject(context.Background(), bucket, file.Filename, object, objectStat.Size(), minio.PutObjectOptions{ContentType: "application/octet-stream"})
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Println("Uploaded", file.Filename, " of size: ", n.Size, "Successfully.")
 	}
+
 	c.String(http.StatusOK, fmt.Sprintf("%d files uploaded to minio!", len(files)))
+}
+
+// POST Remove_minio_object removes an object from a bucket
+func Remove_minio_object(c *gin.Context) {
+	opts := minio.RemoveObjectOptions{
+		GovernanceBypass: true,
+	}
+	bucket := c.Param("bucket")
+	name := c.Param("name")
+	err := minio_client.RemoveObject(context.Background(), bucket, name, opts)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Println("Success")
 }
 
 // minio_env Object
