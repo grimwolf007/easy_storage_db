@@ -31,10 +31,10 @@ remove used images
      - [x] Upload a file to the webapp
      - [x] Create Bucket
      - [x] List Buckets
-     - [ ] *View Bucket Details* (Probably not necessary)
+     - [x] View Items in Bucket
      - [ ] *Update Bucket Details* (Probably not necessary)
      - [x] Remove Buckets
-     - [ ] Upload an object to minio
+     - [x] Upload an object to minio
        - [ ] and store details in postgres
        - [ ] and check if the name is already used
        - [ ] and check if file already exists and you just want to add the name as a new tag

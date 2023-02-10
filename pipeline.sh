@@ -138,23 +138,34 @@ info Testing Minio
     SucOrFail $tmp "$test Test"
   echo
 
-  test="Put_Objects"
+  test="Put_Object"
   info "Testing ${test}"
     name="upload_testing2"
     file="./test/test_upload_files/${name}"
     test_file="${file}.test"
     upload_file="./test/${name}.test"
     actual_file="${file}.act"
-    curl -f -X POST http://localhost:8080/upload/server -F "upload[]=@${test_file}"
-    mv -f ${upload_file} ${actual_file}
-    diff $test_file $actual_file && tmp=0 || tmp=1
+    curl -X POST http://localhost:8080/upload/object/test-bucket \
+       -F "upload[]=@${test_file}"
+    curl -o test.json -f -X GET http://localhost:8080/bucket/test-bucket
+    exists=$(cat test.json | jq '.[1]')
+    info "Objects: $exists"
+    [ ! -z "$exists" ] && tmp=0 || tmp=1
     SucOrFail $tmp "${test} Test"
+    rm test.json
   echo 
 
 
 
-  info "Testing remove object"
-  fatal "No Test Made"
+  test="Remove_Object"
+  info "Testing ${test}"
+    curl -f -X POST http://localhost:8080/remove_object/test-bucket/upload-testing2.test
+    curl -o test.json -f -X GET http://localhost:8080/bucket/test-bucket
+    exists=$(cat test.json | jq '.[1]')
+    info "Objects: $exists"
+    [ -z "$exists" ] && tmp=0 || tmp=1
+    SucOrFail $tmp "${test} Test"
+    rm test.json
   echo
 
 #echo Testing Postgres
